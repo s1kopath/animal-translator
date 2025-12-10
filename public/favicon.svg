@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="pawGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9333ea;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ec4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#pawGradient)"/>
+  
+  <!-- Paw pad (main) -->
+  <ellipse cx="50" cy="60" rx="18" ry="22" fill="#fff" opacity="0.9"/>
+  
+  <!-- Toe pads -->
+  <ellipse cx="35" cy="40" rx="8" ry="10" fill="#fff" opacity="0.9"/>
+  <ellipse cx="50" cy="35" rx="8" ry="10" fill="#fff" opacity="0.9"/>
+  <ellipse cx="65" cy="40" rx="8" ry="10" fill="#fff" opacity="0.9"/>
+  <ellipse cx="42" cy="50" rx="7" ry="9" fill="#fff" opacity="0.9"/>
+  <ellipse cx="58" cy="50" rx="7" ry="9" fill="#fff" opacity="0.9"/>
+</svg>

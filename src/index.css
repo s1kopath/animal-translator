@@ -9,9 +9,44 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent text size adjustment on iOS */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Improve touch targets for mobile */
+button,
+a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better scrolling on mobile */
+html {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Ensure containers don't overflow on mobile */
+.container {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Improve button touch targets - minimum 44x44px for mobile */
+button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Better text wrapping on mobile */
+p,
+span,
+div {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}

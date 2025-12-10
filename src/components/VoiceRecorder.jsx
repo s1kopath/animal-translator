@@ -169,26 +169,28 @@ function VoiceRecorder({ animal, isRecording, onRecordingStart, onRecordingStop 
   }
 
   return (
-    <div className="flex flex-col items-center space-y-6">
+    <div className="flex flex-col items-center space-y-4 sm:space-y-6">
       <div className="text-center">
-        <div className="text-6xl mb-4">{animal.emoji}</div>
-        <p className="text-lg text-gray-600">
+        <div className="text-5xl sm:text-6xl mb-3 sm:mb-4">{animal.emoji}</div>
+        <p className="text-base sm:text-lg text-gray-600 px-2">
           Get ready to record {animal.name}'s voice!
         </p>
       </div>
 
-      <div className="flex items-center space-x-6">
+      <div className="flex items-center space-x-4 sm:space-x-6 w-full sm:w-auto">
         {!isRecording ? (
           <button
             onClick={startRecording}
             className="
               bg-gradient-to-r from-red-500 to-pink-500
-              text-white font-bold py-4 px-8 rounded-full
-              shadow-lg hover:shadow-xl transform hover:scale-105
-              transition-all duration-200 flex items-center space-x-3
+              text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full
+              shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95
+              transition-all duration-200 flex items-center justify-center space-x-2 sm:space-x-3
+              w-full sm:w-auto text-sm sm:text-base
+              touch-manipulation
             "
           >
-            <span className="text-2xl">🎤</span>
+            <span className="text-xl sm:text-2xl">🎤</span>
             <span>Start Recording</span>
           </button>
         ) : (
@@ -196,29 +198,31 @@ function VoiceRecorder({ animal, isRecording, onRecordingStart, onRecordingStop 
             onClick={stopRecording}
             className="
               bg-gradient-to-r from-gray-600 to-gray-800
-              text-white font-bold py-4 px-8 rounded-full
-              shadow-lg hover:shadow-xl transform hover:scale-105
-              transition-all duration-200 flex items-center space-x-3
+              text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-full
+              shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95
+              transition-all duration-200 flex items-center justify-center space-x-2 sm:space-x-3
+              w-full sm:w-auto text-sm sm:text-base
+              touch-manipulation
             "
           >
-            <span className="text-2xl animate-pulse">⏹️</span>
+            <span className="text-xl sm:text-2xl animate-pulse">⏹️</span>
             <span>Stop Recording</span>
           </button>
         )}
       </div>
 
       {isRecording && (
-        <div className="text-center">
-          <div className="inline-flex items-center space-x-2 bg-red-100 px-4 py-2 rounded-full">
-            <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            <span className="text-red-700 font-semibold">
+        <div className="text-center w-full">
+          <div className="inline-flex items-center space-x-2 bg-red-100 px-3 sm:px-4 py-2 rounded-full">
+            <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 bg-red-500 rounded-full animate-pulse"></div>
+            <span className="text-red-700 font-semibold text-sm sm:text-base">
               Recording: {formatTime(recordingTime)}
             </span>
           </div>
         </div>
       )}
 
-      <div className="text-sm text-gray-500 text-center max-w-md">
+      <div className="text-xs sm:text-sm text-gray-500 text-center max-w-md px-4">
         💡 Tip: Make sure the animal is close enough for clear audio recording
       </div>
     </div>

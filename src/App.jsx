@@ -71,23 +71,23 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 overflow-x-hidden">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-gray-800 mb-3">
+      <main className="mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl w-full">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-2 sm:mb-3">
             🐾 Animal Translator
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 px-2">
             Record an animal's voice and discover what they're saying!
           </p>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8">
           {/* Animal Selection */}
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
               Step 1: Choose an Animal
             </h2>
             <AnimalSelector
@@ -98,8 +98,8 @@ function App() {
 
           {/* Voice Recording */}
           {selectedAnimal && (
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
                 Step 2: Record {selectedAnimal.name}'s Voice
               </h2>
               <VoiceRecorder
@@ -113,29 +113,29 @@ function App() {
 
           {/* Error Display */}
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6">
-              <div className="flex items-start space-x-3">
-                <span className="text-2xl">⚠️</span>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-red-800 mb-2">Translation Error</h3>
-                  <div className="text-red-700 text-sm whitespace-pre-wrap font-mono text-xs bg-red-100 p-3 rounded mb-3 max-h-60 overflow-y-auto">
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl sm:rounded-2xl p-4 sm:p-6">
+              <div className="flex items-start space-x-2 sm:space-x-3">
+                <span className="text-xl sm:text-2xl flex-shrink-0">⚠️</span>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-red-800 mb-2 text-sm sm:text-base">Translation Error</h3>
+                  <div className="text-red-700 text-xs sm:text-sm whitespace-pre-wrap font-mono bg-red-100 p-2 sm:p-3 rounded mb-3 max-h-48 sm:max-h-60 overflow-y-auto break-words">
                     {error}
                   </div>
                   <div className="text-red-600 text-xs space-y-1">
                     <p className="font-semibold">Troubleshooting:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2">
+                    <ul className="list-disc list-inside space-y-1 ml-1 sm:ml-2">
                       <li>Make sure you've set <code className="bg-red-200 px-1 rounded">VITE_HF_TOKEN</code> in your <code className="bg-red-200 px-1 rounded">.env</code> file</li>
                       <li>Verify your token has "Inference API" permissions at{' '}
                         <a
                           href="https://huggingface.co/settings/tokens"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="underline"
+                          className="underline break-all"
                         >
                           Hugging Face Settings
                         </a>
                       </li>
-                      <li>Check the browser console (F12) for detailed error logs</li>
+                      <li>Check the browser console for detailed error logs</li>
                     </ul>
                   </div>
                 </div>
@@ -145,8 +145,8 @@ function App() {
 
           {/* Translation Display */}
           {(translation || isTranslating) && (
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
                 Step 3: Translation
               </h2>
               <TranslationDisplay
@@ -159,8 +159,10 @@ function App() {
         </div>
       </main>
 
-      <footer className="text-center py-8 text-gray-600">
-        <p>Made with ❤️ for animal lovers everywhere</p>
+      <footer className="text-center py-4 sm:py-8 text-gray-600 text-sm sm:text-base px-4">
+        <div className="mx-auto max-w-4xl w-full">
+          <p>Made with ❤️ for animal lovers everywhere</p>
+        </div>
       </footer>
     </div>
   )

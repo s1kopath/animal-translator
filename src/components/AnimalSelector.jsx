@@ -13,7 +13,7 @@ const animals = [
 
 function AnimalSelector({ selectedAnimal, onSelect }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
       {animals.map((animal) => {
         const isSelected = selectedAnimal?.name === animal.name
         return (
@@ -21,24 +21,24 @@ function AnimalSelector({ selectedAnimal, onSelect }) {
             key={animal.name}
             onClick={() => onSelect(animal)}
             className={`
-              relative overflow-hidden rounded-xl p-4 transition-all duration-300
-              transform hover:scale-105 active:scale-95
-              ${isSelected 
-                ? `bg-gradient-to-br ${animal.color} shadow-lg ring-4 ring-primary-400` 
+              relative overflow-hidden rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-300
+              transform hover:scale-105 active:scale-95 touch-manipulation
+              ${isSelected
+                ? `bg-gradient-to-br ${animal.color} shadow-lg ring-2 sm:ring-4 ring-primary-400`
                 : 'bg-gradient-to-br from-gray-100 to-gray-200 hover:shadow-md'
               }
             `}
           >
-            <div className="text-5xl mb-2">{animal.emoji}</div>
+            <div className="text-4xl sm:text-5xl mb-1 sm:mb-2">{animal.emoji}</div>
             <div className={`
-              text-sm font-semibold
+              text-xs sm:text-sm font-semibold
               ${isSelected ? 'text-white' : 'text-gray-700'}
             `}>
               {animal.name}
             </div>
             {isSelected && (
-              <div className="absolute top-2 right-2">
-                <span className="text-white text-lg">✓</span>
+              <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2">
+                <span className="text-white text-base sm:text-lg">✓</span>
               </div>
             )}
           </button>
