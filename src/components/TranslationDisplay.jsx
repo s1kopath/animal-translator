@@ -1,4 +1,80 @@
+import { useState, useEffect, useRef } from 'react'
+
 function TranslationDisplay({ translation, isTranslating, animal }) {
+  const [isPlaying, setIsPlaying] = useState(false)
+  const synthRef = useRef(null)
+
+  // Cleanup speech on unmount
+  useEffect(() => {
+    return () => {
+      if (synthRef.current) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
+
+  const handlePlayTranslation = () => {
+    if (!translation?.text) return
+
+    // Check if browser supports speech synthesis
+    if (!('speechSynthesis' in window)) {
+      alert('Your browser does not support text-to-speech. Please use a modern browser like Chrome, Firefox, or Safari.')
+      return
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel()
+
+    // Create a new speech utterance
+    const utterance = new SpeechSynthesisUtterance(translation.text)
+
+    // Configure voice settings
+    utterance.rate = 1.0 // Normal speed
+    utterance.pitch = 1.0 // Normal pitch
+    utterance.volume = 1.0 // Full volume
+
+    // Try to use a pleasant English voice if available
+    const voices = window.speechSynthesis.getVoices()
+    if (voices.length > 0) {
+      const preferredVoice = voices.find(voice =>
+        (voice.name.includes('Google') ||
+          voice.name.includes('Samantha') ||
+          voice.name.includes('Alex') ||
+          voice.name.includes('Karen') ||
+          voice.name.includes('Daniel')) &&
+        voice.lang.startsWith('en')
+      ) || voices.find(voice => voice.lang.startsWith('en'))
+
+      if (preferredVoice) {
+        utterance.voice = preferredVoice
+      }
+    }
+
+    // Handle speech events
+    utterance.onstart = () => {
+      setIsPlaying(true)
+    }
+
+    utterance.onend = () => {
+      setIsPlaying(false)
+    }
+
+    utterance.onerror = (error) => {
+      console.error('Speech synthesis error:', error)
+      setIsPlaying(false)
+      alert('Could not play translation. Please check your browser settings.')
+    }
+
+    // Start speaking
+    window.speechSynthesis.speak(utterance)
+    synthRef.current = utterance
+  }
+
+  const handleStopPlayback = () => {
+    window.speechSynthesis.cancel()
+    setIsPlaying(false)
+  }
+
   const handleCopyText = () => {
     if (translation?.text) {
       navigator.clipboard.writeText(translation.text)
@@ -6,6 +82,26 @@ function TranslationDisplay({ translation, isTranslating, animal }) {
       alert('Translation copied to clipboard!')
     }
   }
+
+  // Load voices when component mounts
+  useEffect(() => {
+    // Some browsers load voices asynchronously
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices()
+    }
+    loadVoices()
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices
+    }
+  }, [])
+
+  // Stop speech when translation changes
+  useEffect(() => {
+    if (translation) {
+      window.speechSynthesis.cancel()
+      setIsPlaying(false)
+    }
+  }, [translation])
   if (isTranslating) {
     return (
       <div className="text-center py-12">
@@ -87,14 +183,31 @@ function TranslationDisplay({ translation, isTranslating, animal }) {
       )}
 
       <div className="flex space-x-3">
-        <button className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-          🔊 Play Translation
-        </button>
+        {isPlaying ? (
+          <button
+            onClick={handleStopPlayback}
+            className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="animate-pulse">⏹️</span>
+            <span>Stop Playback</span>
+          </button>
+        ) : (
+          <button
+            onClick={handlePlayTranslation}
+            disabled={!translation?.text || !('speechSynthesis' in window)}
+            className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            <span>🔊</span>
+            <span>Play Translation</span>
+          </button>
+        )}
         <button
           onClick={handleCopyText}
-          className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          disabled={!translation?.text}
+          className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
-          📋 Copy Text
+          <span>📋</span>
+          <span>Copy Text</span>
         </button>
       </div>
     </div>

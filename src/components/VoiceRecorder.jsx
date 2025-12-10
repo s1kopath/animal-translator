@@ -4,14 +4,28 @@ function VoiceRecorder({ animal, isRecording, onRecordingStart, onRecordingStop 
   const [recordingTime, setRecordingTime] = useState(0)
   const [hasPermission, setHasPermission] = useState(null)
   const mediaRecorderRef = useRef(null)
+  const streamRef = useRef(null)
   const chunksRef = useRef([])
   const timerRef = useRef(null)
 
   useEffect(() => {
     // Request microphone permission
+    let permissionStream = null
     navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(() => setHasPermission(true))
+      .then((stream) => {
+        permissionStream = stream
+        setHasPermission(true)
+        // Stop the permission check stream immediately
+        stream.getTracks().forEach(track => track.stop())
+      })
       .catch(() => setHasPermission(false))
+
+    // Cleanup function
+    return () => {
+      if (permissionStream) {
+        permissionStream.getTracks().forEach(track => track.stop())
+      }
+    }
   }, [])
 
   useEffect(() => {
@@ -22,6 +36,7 @@ function VoiceRecorder({ animal, isRecording, onRecordingStart, onRecordingStop 
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current)
+        timerRef.current = null
       }
       setRecordingTime(0)
     }
@@ -29,13 +44,47 @@ function VoiceRecorder({ animal, isRecording, onRecordingStart, onRecordingStop 
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current)
+        timerRef.current = null
       }
     }
   }, [isRecording])
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup: stop all tracks when component unmounts
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.stop()
+        })
+        streamRef.current = null
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
+    }
+  }, [])
+
   const startRecording = async () => {
     try {
+      // Stop any existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
+      }
+
+      // Stop any existing MediaRecorder
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop()
+        } catch (e) {
+          // Ignore errors if already stopped
+        }
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream // Store stream in ref
       const mediaRecorder = new MediaRecorder(stream)
       mediaRecorderRef.current = mediaRecorder
       chunksRef.current = []
@@ -50,21 +99,53 @@ function VoiceRecorder({ animal, isRecording, onRecordingStart, onRecordingStop 
         // Use the actual MIME type from MediaRecorder (varies by browser)
         const mimeType = mediaRecorder.mimeType || 'audio/webm'
         const audioBlob = new Blob(chunksRef.current, { type: mimeType })
+
+        // Stop all tracks before calling onRecordingStop
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop())
+          streamRef.current = null
+        }
+
+        // Call onRecordingStop after stopping tracks
         onRecordingStop(audioBlob)
-        stream.getTracks().forEach(track => track.stop())
       }
 
-      mediaRecorder.start()
+      // Start recording with timeslice to ensure continuous recording
+      // timeslice of 1000ms means dataavailable event fires every second
+      mediaRecorder.start(1000)
+
+      // Then notify parent that recording has started
+      // This ensures the button state updates immediately
       onRecordingStart()
     } catch (error) {
       console.error('Error starting recording:', error)
       alert('Could not access microphone. Please check permissions.')
+      // Reset state on error
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
+      }
     }
   }
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop()
+      // Stop the MediaRecorder - the onstop handler will manage cleanup
+      try {
+        if (mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop()
+        }
+      } catch (error) {
+        console.error('Error stopping MediaRecorder:', error)
+        // If stopping fails, manually clean up
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop())
+          streamRef.current = null
+        }
+        // Create empty blob as fallback
+        const emptyBlob = new Blob([], { type: 'audio/webm' })
+        onRecordingStop(emptyBlob)
+      }
     }
   }
 
