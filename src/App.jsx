@@ -36,7 +36,8 @@ function App() {
         text: result.text,
         confidence: result.confidence,
         transcribedText: result.transcribedText,
-        isMockTranscription: result.isMockTranscription || false
+        isMockTranscription: result.isMockTranscription || false,
+        isMockTranslation: result.isMockTranslation || false
       })
     } catch (err) {
       console.error('Translation error:', err)

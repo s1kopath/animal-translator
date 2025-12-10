@@ -231,54 +231,102 @@ export async function translateAnimalSound(transcribedText, animalName) {
       throw new Error('Hugging Face token is required. Please set VITE_HF_TOKEN in your .env file.')
     }
 
-    const prompt = `You are an animal communication expert. A ${animalName} made a sound that was transcribed as: "${transcribedText}". 
+    const prompt = `Translate this ${animalName} sound directly into human speech: "${transcribedText}"
 
-Interpret what the ${animalName} might be saying or feeling. Be creative, fun, and empathetic. Respond in a friendly, conversational way as if the ${animalName} is speaking directly. Keep it to 1-2 sentences.`
+Speak AS the ${animalName} - write what they are saying in first person, directly and naturally. Do not explain or interpret. Just translate their sound into what they would say in human words. Be creative, fun, and empathetic. Keep it to 1-2 sentences.`
 
-    // Use Inference Providers router endpoint for chat completions
-    const response = await fetch(
-      'https://router.huggingface.co/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${HF_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/Meta-Llama-3.1-8B-Instruct:fastest', // Use :fastest for best performance
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a friendly animal communication expert who translates animal sounds into human language with empathy and humor.'
+    // Try multiple models in order of preference
+    const models = [
+      'meta-llama/Llama-3.1-8B-Instruct', // Try without "Meta-" prefix
+      'meta-llama/Meta-Llama-3.1-8B-Instruct', // Original format
+      'mistralai/Mistral-7B-Instruct-v0.2', // Alternative model
+      'mistralai/Mixtral-8x7B-Instruct-v0.1', // Another alternative
+      'google/gemma-2-2b-it', // Smaller alternative
+    ]
+
+    let lastError = null
+    const errors = []
+
+    for (const modelId of models) {
+      try {
+        // Use Inference Providers router endpoint for chat completions
+        const response = await fetch(
+          'https://router.huggingface.co/v1/chat/completions',
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${HF_TOKEN}`,
+              'Content-Type': 'application/json',
             },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: 150,
-          temperature: 0.8,
-        }),
+            body: JSON.stringify({
+              model: modelId,
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You translate animal sounds directly into human speech. Speak as the animal in first person. Do not add explanations, greetings, or meta-commentary. Just translate the sound into what the animal is saying.'
+                },
+                {
+                  role: 'user',
+                  content: prompt
+                }
+              ],
+              max_tokens: 150,
+              temperature: 0.8,
+            }),
+          }
+        )
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}))
+          const errorMsg = errorData.error?.message || `API request failed with status ${response.status}`
+
+          // If model doesn't exist, try next one
+          if (response.status === 404 || errorMsg.includes('does not exist')) {
+            errors.push(`${modelId}: ${errorMsg}`)
+            lastError = new Error(errorMsg)
+            continue
+          }
+
+          // For other errors, throw immediately
+          throw new Error(errorMsg)
+        }
+
+        const result = await response.json()
+        const translationText = result.choices?.[0]?.message?.content ||
+          `The ${animalName} seems to be communicating something, but I couldn't interpret it clearly.`
+
+        // Calculate a mock confidence score (you could enhance this with actual model confidence)
+        const confidence = Math.min(0.95, 0.7 + Math.random() * 0.25)
+
+        return {
+          text: translationText,
+          confidence: confidence,
+          transcribedText: transcribedText
+        }
+      } catch (error) {
+        // If it's a model-not-found error, try next model
+        if (error.message.includes('does not exist') || error.message.includes('404')) {
+          errors.push(`${modelId}: ${error.message}`)
+          lastError = error
+          continue
+        }
+        // For other errors, throw immediately
+        throw error
       }
-    )
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error?.message || `API request failed with status ${response.status}`)
     }
 
-    const result = await response.json()
-    const translationText = result.choices?.[0]?.message?.content ||
-      `The ${animalName} seems to be communicating something, but I couldn't interpret it clearly.`
-
-    // Calculate a mock confidence score (you could enhance this with actual model confidence)
-    const confidence = Math.min(0.95, 0.7 + Math.random() * 0.25)
-
-    return {
-      text: translationText,
-      confidence: confidence,
-      transcribedText: transcribedText
+    // If all models failed, provide helpful error message
+    if (errors.length > 0) {
+      throw new Error(
+        `All translation models failed.\n\nModels tried: ${models.join(', ')}\n\nErrors:\n${errors.map((e, i) => `  ${i + 1}. ${e}`).join('\n')}\n\n` +
+        `Please check:\n` +
+        `1. Visit https://huggingface.co/chat/models to see available models\n` +
+        `2. Update the models array in huggingFaceService.js with a working model\n` +
+        `3. Verify your token has access to Inference Providers API`
+      )
     }
+
+    throw lastError || new Error('Translation failed: Unknown error')
   } catch (error) {
     console.error('Error translating animal sound:', error)
     throw new Error(`Translation failed: ${error.message}`)
@@ -303,6 +351,67 @@ function getMockTranscription(animalName) {
     'Lion': 'roar growl'
   }
   return mockSounds[animalName] || 'animal sound'
+}
+
+/**
+ * Generate a mock translation based on animal type and transcription
+ * Used as fallback when translation API is unavailable
+ */
+function getMockTranslation(animalName, transcribedText) {
+  const translations = {
+    'Dog': [
+      `I'm so excited! Can we play now? I've been waiting!`,
+      `Hey! I'm here and I want your attention!`,
+      `I love you! Give me belly rubs please!`,
+      `Something's happening! I need to protect you!`
+    ],
+    'Cat': [
+      `I'm happy and content. Can I have some treats and scratches behind my ears?`,
+      `I'm hungry! Where's my food?`,
+      `I want attention right now. Pet me please!`,
+      `I'm feeling playful! Let's have some fun together!`
+    ],
+    'Bird': [
+      `Good morning! I'm singing my beautiful song for you!`,
+      `Hey everyone! I'm here and I'm happy!`,
+      `Listen to my lovely voice! I'm calling to my friends!`
+    ],
+    'Cow': [
+      `Hello! I'm calling out to my friends in the field!`,
+      `I'm content and happy here in the pasture!`
+    ],
+    'Pig': [
+      `I'm so excited! Is it time for food?`,
+      `I'm happy and want to play!`
+    ],
+    'Rooster': [
+      `Wake up! It's morning time!`,
+      `I'm announcing the new day!`
+    ],
+    'Duck': [
+      `Hello! I'm here and I'm happy!`,
+      `Let's go swimming together!`
+    ],
+    'Sheep': [
+      `I'm calling to my flock!`,
+      `I'm content and peaceful!`
+    ],
+    'Horse': [
+      `I'm excited and ready to run!`,
+      `Hello friend! Let's go on an adventure!`
+    ],
+    'Lion': [
+      `I'm the king! Hear my powerful voice!`,
+      `I'm calling to my pride!`
+    ]
+  }
+
+  const options = translations[animalName] || [
+    `I'm trying to tell you something important!`,
+    `I'm expressing my feelings to you!`
+  ]
+
+  return options[Math.floor(Math.random() * options.length)]
 }
 
 /**
@@ -332,12 +441,28 @@ export async function processAnimalSound(audioBlob, animalName) {
     }
 
     // Step 2: Translate/interpret the transcribed text
-    const translation = await translateAnimalSound(transcribedText, animalName)
+    let translation
+    let isMockTranslation = false
+
+    try {
+      translation = await translateAnimalSound(transcribedText, animalName)
+    } catch (translationError) {
+      // If translation fails, use mock translation
+      console.warn('Translation API failed, using mock translation:', translationError.message)
+      const mockText = getMockTranslation(animalName, transcribedText)
+      translation = {
+        text: mockText,
+        confidence: 0.6,
+        transcribedText: transcribedText
+      }
+      isMockTranslation = true
+    }
 
     return {
       ...translation,
       transcribedText: transcribedText,
-      isMockTranscription: isMockTranscription
+      isMockTranscription: isMockTranscription,
+      isMockTranslation: isMockTranslation
     }
   } catch (error) {
     console.error('Error processing animal sound:', error)

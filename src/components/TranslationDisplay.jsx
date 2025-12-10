@@ -53,6 +53,11 @@ function TranslationDisplay({ translation, isTranslating, animal }) {
                 ℹ️ Using mock transcription. Speech recognition models are unavailable on the Inference API. Visit <a href="https://huggingface.co/models?pipeline_tag=automatic-speech-recognition&inference=true" target="_blank" rel="noopener noreferrer" className="underline">Hugging Face Models</a> to find available models.
               </div>
             )}
+            {translation.isMockTranslation && (
+              <div className="mt-3 text-xs text-purple-600 bg-purple-50 px-3 py-2 rounded">
+                ℹ️ Using mock translation. Translation models are unavailable. Visit <a href="https://huggingface.co/chat/models" target="_blank" rel="noopener noreferrer" className="underline">Hugging Face Chat Models</a> to find available models.
+              </div>
+            )}
             {translation.isFallback && (
               <div className="mt-3 text-xs text-orange-600 bg-orange-50 px-3 py-2 rounded">
                 ⚠️ Using fallback translation. Check your API configuration.
